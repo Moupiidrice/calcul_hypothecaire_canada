@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HypoVision — Calculatrice hypothécaire</title>
+    <style>
+      :root {
+        --bg: #f6f8fc;
+        --surface: #ffffff;
+        --text: #172033;
+        --muted: #5f6b83;
+        --primary: #1f4ed8;
+        --accent: #cc0000;
+        --border: #dbe3f0;
+        --ok: #0b8a3f;
+        --aero-bg: rgba(255, 255, 255, 0.76);
+        --aero-shadow: 0 14px 34px rgba(26, 47, 94, 0.11);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #c9d4e7;
+        border-radius: 10px;
+        padding: 0.65rem 0.75rem;
+        font-size: 1rem;
+        background: #fff;
+        color: var(--text);
+      }
+      body {
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, #eaf0ff 0%, var(--bg) 40%),
+          var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      select:focus {
+        outline: 3px solid rgba(31, 78, 216, 0.16);
+        border-color: var(--primary);
+      }
+      .hidden {
+        display: none;
+      }
+      .calc-switch {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.45rem;
+        background: #f2f5fb;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.35rem;
+        margin-bottom: 0.45rem;
+      }
+      .calc-switch button {
+        border: 1px solid transparent;
+        background: transparent;
+        color: #3e4f6a;
+        min-height: 40px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0.4rem 0.55rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .calc-switch button:hover {
+        background: #e9efff;
+        color: var(--primary);
+      }
+      .calc-switch button.is-active {
+        background: #ffffff;
+        border-color: #cdd8ee;
+        color: var(--primary);
+        box-shadow: 0 2px 8px rgba(25, 49, 96, 0.08);
+      }
+      .subnote {
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      .container {
+        width: min(1200px, 75%);
+        margin-inline: auto;
+      }
+      .badge {
+        display: inline-block;
+        background: #e9efff;
+        color: var(--primary);
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.2;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 3rem);
+      }
+      h2 {
+        font-size: clamp(1.4rem, 3vw, 2rem);
+      }
+      p {
+        color: var(--muted);
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(10px);
+        background: rgba(246, 248, 252, 0.9);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 64px;
+      }
+      .brand {
+        font-weight: 800;
+        color: var(--primary);
+      }
+      .links a {
+        color: var(--text);
+        text-decoration: none;
+        margin-left: 1rem;
+        font-weight: 600;
+      }
+      .links a:hover {
+        color: var(--primary);
+      }
+
+      .hero {
+        padding: 4rem 0 2.2rem;
+      }
+      .hero-grid {
+        display: grid;
+        gap: 1.2rem;
+        grid-template-columns: 1.2fr 0.8fr;
+        align-items: center;
+      }
+      .hero p {
+        margin-top: 0.9rem;
+        max-width: 65ch;
+      }
+      .cta-row {
+        margin-top: 1.2rem;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .btn {
+        border: none;
+        border-radius: 12px;
+        min-height: 44px;
+        padding: 0.7rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-light {
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid var(--border);
+      }
+      .hero-card {
+        background: linear-gradient(145deg, #ffffff, #f5f8ff);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1rem;
+        box-shadow: 0 12px 30px rgba(37, 66, 125, 0.09);
+      }
+      .hero-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.65rem;
+        margin-top: 0.6rem;
+      }
+      .kpi {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.7rem;
+        text-align: center;
+      }
+      .kpi b {
+        color: var(--primary);
+        font-size: 1rem;
+        display: block;
+      }
+      .kpi span {
+        color: var(--muted);
+        font-size: 0.77rem;
+      }
+
+      section {
+        padding: 2.2rem 0;
+      }
+
+      .section-aero .container {
+        background: var(--aero-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid #d9e3f3;
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: var(--aero-shadow);
+        position: relative;
+        overflow: visible;
+      }
+
+      .section-aero .container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        border-radius: 18px 18px 0 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          rgba(31, 78, 216, 0.75),
+          rgba(204, 0, 0, 0.65)
+        );
+      }
+
+      .section-aero h2 {
+        margin-bottom: 0.35rem;
+        letter-spacing: 0.01em;
+      }
+      .cards {
+        margin-top: 1rem;
+        display: grid;
+        gap: 0.9rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1rem;
+        box-shadow: 0 4px 14px rgba(28, 47, 88, 0.06);
+      }
+      .card h3 {
+        color: var(--primary);
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+      }
+      .card p {
+        font-size: 0.93rem;
+      }
+
+      .steps {
+        display: grid;
+        gap: 0.9rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 1rem;
+      }
+      .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        background: #e9efff;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .calc-wrap {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+        align-items: start;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.1rem;
+        box-shadow: 0 10px 24px rgba(31, 54, 101, 0.08);
+        min-width: 0;
+        overflow: hidden;
+      }
+      .panel h3 {
+        color: var(--primary);
+        margin-bottom: 0.8rem;
+      }
+
+      .field {
+        margin-bottom: 0.85rem;
+      }
+      label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #c9d4e7;
+        border-radius: 10px;
+        padding: 0.65rem 0.75rem;
+        font-size: 1rem;
+      }
+      input:focus {
+        outline: 3px solid rgba(31, 78, 216, 0.16);
+        border-color: var(--primary);
+      }
+      select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #c9d4e7;
+        border-radius: 10px;
+        padding: 0.65rem 0.75rem;
+        font-size: 1rem;
+        background: #fff;
+        color: var(--text);
+      }
+      select:focus {
+        outline: 3px solid rgba(31, 78, 216, 0.16);
+        border-color: var(--primary);
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .hidden {
+        display: none;
+      }
+      .subnote {
+        margin-top: 0.45rem;
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+      .actions {
+        margin-top: 0.6rem;
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
+
+      .error {
+        display: none;
+        margin-top: 0.7rem;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .results-grid {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+      .result {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: #fff;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      }
+      .result .label {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .result .value {
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-top: 0.2rem;
+        overflow-wrap: anywhere;
+      }
+
+      .analysis {
+        margin-top: 0.9rem;
+        display: grid;
+        gap: 0.9rem;
+        grid-template-columns: minmax(0, 230px) minmax(0, 1fr);
+      }
+      .donut-box {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.8rem;
+        background: #fff;
+        text-align: center;
+      }
+      .donut {
+        --p: 50;
+        width: 150px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        margin: 0.5rem auto 0.3rem;
+        background: conic-gradient(
+          var(--primary) calc(var(--p) * 1%),
+          var(--accent) 0
+        );
+        position: relative;
+      }
+      .donut::after {
+        content: "";
+        position: absolute;
+        inset: 20px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .legend {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .table-wrap {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: auto;
+        max-height: 380px;
+        background: #fff;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 420px;
+      }
+      th,
+      td {
+        padding: 0.54rem 0.62rem;
+        border-bottom: 1px solid #eef2f8;
+        text-align: right;
+        font-size: 0.84rem;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        background: #f9fbff;
+        color: #314363;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: center;
+      }
+
+      .note {
+        margin-top: 0.65rem;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .mode-note {
+        margin-top: 0.6rem;
+        color: #34445e;
+        font-size: 0.82rem;
+        background: #f5f8ff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.6rem 0.7rem;
+      }
+      .footer {
+        padding: 2rem 0 2.8rem;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .btn-pdf {
+        background: #0b8a3f;
+        color: #fff;
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+        min-height: 38px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .btn-pdf:hover {
+        background: #097034;
+      }
+      .btn-pdf:disabled {
+        background: #9ab8a8;
+        cursor: not-allowed;
+      }
+
+      /* ===== IMPRESSION / PDF ===== */
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        body {
+          background: #fff !important;
+        }
+
+        .nav,
+        .hero,
+        #fonctionnalites,
+        #comment,
+        footer,
+        .btn-pdf,
+        .actions,
+        #error-msg,
+        .calc-switch,
+        form.panel {
+          display: none !important;
+        }
+
+        .section-aero {
+          padding: 0 !important;
+        }
+
+        .section-aero .container {
+          width: 100% !important;
+          background: #fff !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
+        .section-aero .container::before {
+          display: none !important;
+        }
+
+        .calc-wrap {
+          display: block !important;
+        }
+
+        section.panel {
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
+        #print-report {
+          display: block !important;
+        }
+
+        .analysis {
+          display: block !important;
+        }
+
+        .donut-box {
+          display: none !important;
+        }
+
+        /* garder le tableau comme sur la page de calcul */
+        .table-wrap {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+
+        table {
+          min-width: 100% !important;
+        }
+
+        thead {
+          display: table-header-group !important;
+        }
+
+        tbody tr {
+          display: table-row !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        tbody td {
+          display: table-cell !important;
+        }
+
+        tbody td::before {
+          display: none !important;
+        }
+
+        @page {
+          margin: 1.5cm;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .calc-wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 980px) {
+        .container {
+          width: 88%;
+        }
+        .hero-grid,
+        .analysis,
+        .cards,
+        .steps {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          padding: 1rem;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .container {
+          width: 92%;
+        }
+        .panel {
+          padding: 0.9rem;
+        }
+
+        .table-wrap {
+          max-height: none;
+          overflow: visible;
+          border: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+
+        table {
+          min-width: 100%;
+        }
+
+        thead {
+          display: none;
+        }
+
+        tbody tr {
+          display: block;
+          background: #fff;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 0.2rem 0.7rem;
+          margin-bottom: 0.65rem;
+          box-shadow: 0 4px 10px rgba(26, 47, 94, 0.06);
+        }
+
+        tbody td {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 0.8rem;
+          align-items: center;
+          text-align: right;
+          border-bottom: 1px dashed #e7ecf5;
+          padding: 0.5rem 0;
+          font-size: 0.82rem;
+        }
+
+        tbody td:last-child {
+          border-bottom: none;
+        }
+
+        tbody td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-weight: 700;
+          text-align: left;
+        }
+
+        .calc-switch {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="container nav-wrap">
+        <div class="brand">HypoVision</div>
+        <div class="links">
+          <a href="#fonctionnalites">Fonctionnalités</a>
+          <a href="#comment">Comment ça marche</a>
+          <a href="#calcul">Calculatrice</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="badge">OUTIL 100 % CÔTÉ CLIENT</span>
+          <h1>Pilotez votre hypothèque avec clarté</h1>
+          <p>
+            Estimez votre versement mensuel, suivez la part capital/intérêts et
+            explorez votre amortissement mois par mois dans une interface plus
+            lisible.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#calcul">Calculer maintenant</a>
+            <a class="btn btn-light" href="#comment">Voir le guide</a>
+          </div>
+        </div>
+        <aside class="hero-card" aria-label="Aperçu rapide">
+          <h3 style="color: var(--primary)">Aperçu instantané</h3>
+          <p style="font-size: 0.9rem">
+            Conçu pour mobile et desktop, sans envoi de données.
+          </p>
+          <div class="hero-kpis">
+            <div class="kpi"><b>0 data</b><span>collectée</span></div>
+            <div class="kpi"><b>Instant</b><span>résultats</span></div>
+            <div class="kpi"><b>100 %</b><span>gratuit</span></div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <section id="fonctionnalites" class="section-aero">
+      <div class="container">
+        <h2>Tout ce qu’il faut pour analyser votre prêt</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>Calcul instantané</h3>
+            <p>
+              Versement mensuel selon la formule standard, avec validation des
+              entrées.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Tableau d’amortissement</h3>
+            <p>
+              Ventilation détaillée de chaque mois : intérêts, capital et solde
+              restant.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Lecture visuelle</h3>
+            <p>
+              Donut capital/intérêts pour comprendre la structure de votre coût
+              total.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="comment" class="section-aero">
+      <div class="container">
+        <h2>Simple en 3 étapes</h2>
+        <div class="steps">
+          <article class="card">
+            <div class="step-num">1</div>
+            <h3>Entrez vos paramètres</h3>
+            <p>Montant, taux annuel et durée en mois.</p>
+          </article>
+          <article class="card">
+            <div class="step-num">2</div>
+            <h3>Lancez le calcul</h3>
+            <p>Les résultats s’affichent immédiatement.</p>
+          </article>
+          <article class="card">
+            <div class="step-num">3</div>
+            <h3>Analysez</h3>
+            <p>Lisez le tableau et la part capital/intérêts.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="calcul" class="section-aero">
+      <div class="container calc-wrap" aria-label="Calcul hypothécaire">
+        <form class="panel" id="calc-form" novalidate>
+          <h3>Section calcul</h3>
+          <div class="field">
+            <label for="calc-type">Type de calculateur</label>
+
+            <div
+              class="calc-switch"
+              role="tablist"
+              aria-label="Choix du calculateur"
+            >
+              <button
+                type="button"
+                class="is-active"
+                data-mode="standard"
+                role="tab"
+                aria-selected="true"
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                data-mode="nouvel-acheteur"
+                role="tab"
+                aria-selected="false"
+              >
+                Nouvel acheteur
+              </button>
+              <button
+                type="button"
+                data-mode="refinancement"
+                role="tab"
+                aria-selected="false"
+              >
+                Refinancement
+              </button>
+            </div>
+
+            <select
+              id="calc-type"
+              class="hidden"
+              aria-describedby="calc-type-help"
+            >
+              <option value="standard" selected>
+                Standard (montant du prêt)
+              </option>
+              <option value="nouvel-acheteur">
+                Nouvel acheteur (prix + mise de fonds + SCHL)
+              </option>
+              <option value="refinancement">
+                Refinancement / Renouvellement
+              </option>
+            </select>
+            <p class="hint" id="calc-type-help">
+              Choisissez le mode selon votre besoin.
+            </p>
+          </div>
+
+          <div id="fields-standard">
+            <div class="field">
+              <label for="montant">Montant du prêt (CAD)</label>
+              <input
+                id="montant"
+                type="number"
+                min="1"
+                step="1000"
+                value="350000"
+                required
+              />
+              <p class="hint">Doit être supérieur à 0.</p>
+            </div>
+          </div>
+
+          <div id="fields-buyer" class="hidden">
+            <div class="field">
+              <label for="property-type">Type de propriété</label>
+              <select id="property-type">
+                <option value="standard" selected>
+                  Unifamiliale / Condo / Duplex
+                </option>
+                <option value="plex34">3-4 plex (propriétaire occupant)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="prix-propriete">Prix de la propriété (CAD)</label>
+              <input
+                id="prix-propriete"
+                type="number"
+                min="1"
+                step="1000"
+                value="550000"
+              />
+            </div>
+            <div class="field">
+              <label for="mise-fonds">Mise de fonds (CAD)</label>
+              <input
+                id="mise-fonds"
+                type="number"
+                min="0"
+                step="1000"
+                value="50000"
+              />
+              <p class="subnote">
+                Les règles minimales de mise de fonds et la prime SCHL sont
+                appliquées.
+              </p>
+            </div>
+          </div>
+
+          <div id="fields-refi" class="hidden">
+            <div class="field">
+              <label for="solde-actuel">Solde hypothécaire actuel (CAD)</label>
+              <input
+                id="solde-actuel"
+                type="number"
+                min="1"
+                step="1000"
+                value="280000"
+              />
+            </div>
+            <div class="field">
+              <label for="montant-ajoute"
+                >Montant additionnel refinancé (CAD)</label
+              >
+              <input
+                id="montant-ajoute"
+                type="number"
+                min="0"
+                step="1000"
+                value="0"
+              />
+              <p class="subnote">Ex. travaux, consolidation ou liquidités.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="taux">Taux annuel (%)</label>
+            <input
+              id="taux"
+              type="number"
+              min="0"
+              step="0.01"
+              value="4.95"
+              required
+            />
+            <p class="hint">Valeur numérique positive ou nulle.</p>
+          </div>
+          <div class="field">
+            <label for="duree">Durée (mois)</label>
+            <input
+              id="duree"
+              type="number"
+              min="1"
+              max="480"
+              step="1"
+              value="300"
+              required
+            />
+            <p class="hint">1 à 480 mois.</p>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">Calculer</button>
+            <button type="reset" class="btn btn-light">Réinitialiser</button>
+          </div>
+          <p id="error-msg" class="error" role="alert"></p>
+        </form>
+
+        <section class="panel" aria-live="polite">
+          <h3>Résultats</h3>
+
+          <!-- Bloc visible uniquement à l'impression -->
+          <div id="print-report" style="display: none">
+            <h2
+              style="color: #1f4ed8; margin-bottom: 0.4rem; font-size: 1.3rem"
+            >
+              Rapport hypothécaire — HypoVision
+            </h2>
+            <p style="color: #555; font-size: 0.85rem; margin-bottom: 0.8rem">
+              Généré le <span id="print-date"></span>
+            </p>
+            <h3 style="color: #1f4ed8; font-size: 1rem; margin-bottom: 0.4rem">
+              Paramètres saisis
+            </h3>
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 0.9rem;
+                font-size: 10pt;
+              "
+            >
+              <thead>
+                <tr style="background: #e8edf8">
+                  <th
+                    style="
+                      text-align: left;
+                      padding: 0.4rem 0.6rem;
+                      border: 1px solid #ccc;
+                    "
+                  >
+                    Paramètre
+                  </th>
+                  <th
+                    style="
+                      text-align: right;
+                      padding: 0.4rem 0.6rem;
+                      border: 1px solid #ccc;
+                    "
+                  >
+                    Valeur
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="print-params"></tbody>
+            </table>
+            <h3 style="color: #1f4ed8; font-size: 1rem; margin-bottom: 0.5rem">
+              Résultats du calcul
+            </h3>
+          </div>
+
+          <div class="results-grid">
+            <article class="result">
+              <p class="label">Versement mensuel</p>
+              <p class="value" id="res-mensuel">-</p>
+            </article>
+            <article class="result">
+              <p class="label">Total intérêts</p>
+              <p class="value" id="res-interets">-</p>
+            </article>
+            <article class="result">
+              <p class="label">Total versé</p>
+              <p class="value" id="res-total">-</p>
+            </article>
+            <article class="result">
+              <p class="label">Prime SCHL</p>
+              <p class="value" id="res-prime-schl">-</p>
+            </article>
+            <article class="result">
+              <p class="label">Prêt assuré (avec prime)</p>
+              <p class="value" id="res-pret-assure">-</p>
+            </article>
+          </div>
+
+          <div class="analysis">
+            <aside class="donut-box">
+              <h4 style="color: var(--primary)">Répartition</h4>
+              <div id="donut" class="donut" style="--p: 50"></div>
+              <p class="legend" id="legend">Capital 50 % • Intérêts 50 %</p>
+            </aside>
+            <div>
+              <h4 style="color: var(--primary); margin-bottom: 0.45rem">
+                Tableau d’amortissement
+              </h4>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Mois</th>
+                      <th>Versement</th>
+                      <th>Intérêts</th>
+                      <th>Capital</th>
+                      <th>Solde restant</th>
+                    </tr>
+                  </thead>
+                  <tbody id="amort-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <p class="note">
+            Formule : M = P × r(1+r)^n / ((1+r)^n - 1), avec r = taux annuel /
+            12 / 100.
+          </p>
+          <p class="note" id="schl-note">
+            Mode standard : prime SCHL non applicable.
+          </p>
+          <button
+            id="btn-pdf"
+            class="btn-pdf"
+            type="button"
+            disabled
+            title="Calculez d'abord pour activer le rapport"
+          >
+            &#128196; Télécharger le rapport PDF
+          </button>
+        </section>
+      </div>
+    </section>
+
+    <footer class="footer">
+      © 2026 HypoVision — Simulation fournie à titre indicatif.
+    </footer>
+
+    <script>
+      "use strict";
+
+      const form = document.getElementById("calc-form");
+      const calcType = document.getElementById("calc-type");
+      const modeButtons = document.querySelectorAll(".calc-switch button");
+      const fieldsStandard = document.getElementById("fields-standard");
+      const fieldsBuyer = document.getElementById("fields-buyer");
+      const fieldsRefi = document.getElementById("fields-refi");
+
+      const inputMontant = document.getElementById("montant");
+      const inputPrixPropriete = document.getElementById("prix-propriete");
+      const inputMiseFonds = document.getElementById("mise-fonds");
+      const inputPropertyType = document.getElementById("property-type");
+      const inputSoldeActuel = document.getElementById("solde-actuel");
+      const inputMontantAjoute = document.getElementById("montant-ajoute");
+      const inputTaux = document.getElementById("taux");
+      const inputDuree = document.getElementById("duree");
+
+      const resMensuel = document.getElementById("res-mensuel");
+      const resInterets = document.getElementById("res-interets");
+      const resTotal = document.getElementById("res-total");
+      const resPrimeSchl = document.getElementById("res-prime-schl");
+      const resPretAssure = document.getElementById("res-pret-assure");
+      const schlNote = document.getElementById("schl-note");
+      const amortBody = document.getElementById("amort-body");
+      const donut = document.getElementById("donut");
+      const legend = document.getElementById("legend");
+      const errorMsg = document.getElementById("error-msg");
+
+      function formatCAD(value) {
+        return value.toLocaleString("fr-CA", {
+          style: "currency",
+          currency: "CAD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function validateInputs(P, tauxAnnuel, n) {
+        if (!Number.isFinite(P) || P <= 0)
+          return "Le montant du prêt doit être numérique et supérieur à 0.";
+        if (!Number.isFinite(tauxAnnuel) || tauxAnnuel < 0)
+          return "Le taux annuel doit être numérique et supérieur ou égal à 0.";
+        if (!Number.isInteger(n) || n < 1 || n > 480)
+          return "La durée doit être un entier entre 1 et 480 mois.";
+        return "";
+      }
+
+      function minDownPaymentAmount(price, propertyType) {
+        if (price > 1500000) {
+          return price * 0.2;
+        }
+
+        if (propertyType === "plex34") {
+          return price * 0.1;
+        }
+
+        if (price <= 500000) {
+          return price * 0.05;
+        }
+
+        return 500000 * 0.05 + (price - 500000) * 0.1;
+      }
+
+      function schlPremiumRate(downPaymentPercent, propertyType) {
+        if (downPaymentPercent >= 20) {
+          return 0;
+        }
+
+        // Barème indicatif (fréquemment utilisé) pour simulation.
+        if (propertyType === "plex34") {
+          if (downPaymentPercent < 15) return 0.045;
+          return 0.034;
+        }
+
+        if (downPaymentPercent < 10) return 0.04;
+        if (downPaymentPercent < 15) return 0.031;
+        return 0.028;
+      }
+
+      function validateBuyerInputs(price, downPayment, propertyType) {
+        if (!Number.isFinite(price) || price <= 0) {
+          return "Le prix de la propriété doit être numérique et supérieur à 0.";
+        }
+        if (!Number.isFinite(downPayment) || downPayment < 0) {
+          return "La mise de fonds doit être numérique et positive ou nulle.";
+        }
+        if (downPayment >= price) {
+          return "La mise de fonds doit être inférieure au prix de la propriété.";
+        }
+
+        const minDown = minDownPaymentAmount(price, propertyType);
+        if (downPayment < minDown) {
+          return `Mise de fonds insuffisante. Minimum requis : ${formatCAD(minDown)}.`;
+        }
+
+        return "";
+      }
+
+      function setCalculatorMode() {
+        const mode = calcType.value;
+        fieldsStandard.classList.toggle("hidden", mode !== "standard");
+        fieldsBuyer.classList.toggle("hidden", mode !== "nouvel-acheteur");
+        fieldsRefi.classList.toggle("hidden", mode !== "refinancement");
+
+        modeButtons.forEach((btn) => {
+          const active = btn.dataset.mode === mode;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+      }
+
+      function calculateMortgage(P, tauxAnnuel, n) {
+        const r = tauxAnnuel / 12 / 100;
+        const mensuel =
+          r === 0
+            ? P / n
+            : (P * (r * Math.pow(1 + r, n))) / (Math.pow(1 + r, n) - 1);
+        const totalPaye = mensuel * n;
+        const totalInterets = Math.max(0, totalPaye - P);
+        return { mensuel, totalPaye, totalInterets, r };
+      }
+
+      function buildAmortizationSchedule(P, n, mensuel, r) {
+        const rows = [];
+        let solde = P;
+        for (let mois = 1; mois <= n; mois++) {
+          const interets = r === 0 ? 0 : solde * r;
+          let capital = mensuel - interets;
+          if (capital > solde || mois === n) capital = solde;
+          const versement = capital + interets;
+          solde = Math.max(0, solde - capital);
+          rows.push({ mois, versement, interets, capital, solde });
+        }
+        return rows;
+      }
+
+      function renderResults(
+        result,
+        capitalInitial,
+        primeSchl = 0,
+        insuredLoan = null,
+      ) {
+        resMensuel.textContent = formatCAD(result.mensuel);
+        resInterets.textContent = formatCAD(result.totalInterets);
+        resTotal.textContent = formatCAD(result.totalPaye);
+
+        resPrimeSchl.textContent = formatCAD(primeSchl);
+        resPretAssure.textContent =
+          insuredLoan !== null ? formatCAD(insuredLoan) : "-";
+
+        const pCapital = Math.max(
+          0,
+          Math.min(100, (capitalInitial / result.totalPaye) * 100),
+        );
+        const pInterets = 100 - pCapital;
+        donut.style.setProperty("--p", pCapital.toFixed(2));
+        legend.textContent = `Capital ${pCapital.toFixed(1)} % • Intérêts ${pInterets.toFixed(1)} %`;
+
+        if (btnPdf) {
+          btnPdf.disabled = false;
+          btnPdf.title = "Télécharger le rapport en PDF";
+        }
+      }
+
+      function renderAmortizationTable(rows) {
+        amortBody.innerHTML = rows
+          .map(
+            (row) => `
+          <tr>
+            <td data-label="Mois">${row.mois}</td>
+            <td data-label="Versement">${formatCAD(row.versement)}</td>
+            <td data-label="Intérêts">${formatCAD(row.interets)}</td>
+            <td data-label="Capital">${formatCAD(row.capital)}</td>
+            <td data-label="Solde restant">${formatCAD(row.solde)}</td>
+          </tr>
+        `,
+          )
+          .join("");
+      }
+
+      function clearError() {
+        errorMsg.style.display = "none";
+        errorMsg.textContent = "";
+      }
+      function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = "block";
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        clearError();
+
+        const tauxAnnuel = parseFloat(inputTaux.value);
+        const n = parseInt(inputDuree.value, 10);
+
+        let capitalDeCalcul = 0;
+        let primeSchl = 0;
+        let note = "";
+
+        const mode = calcType.value;
+
+        if (mode === "nouvel-acheteur") {
+          const price = parseFloat(inputPrixPropriete.value);
+          const downPayment = parseFloat(inputMiseFonds.value);
+          const propertyType = inputPropertyType.value;
+
+          const validationMessage = validateInputs(price, tauxAnnuel, n);
+          if (validationMessage) return showError(validationMessage);
+
+          const buyerValidation = validateBuyerInputs(
+            price,
+            downPayment,
+            propertyType,
+          );
+          if (buyerValidation) return showError(buyerValidation);
+
+          const baseLoan = price - downPayment;
+          const downPercent = (downPayment / price) * 100;
+          const rate = schlPremiumRate(downPercent, propertyType);
+          primeSchl = baseLoan * rate;
+          capitalDeCalcul = baseLoan + primeSchl;
+
+          const minDown = minDownPaymentAmount(price, propertyType);
+          note = `Mode nouvel acheteur : mise de fonds minimale ${formatCAD(minDown)}; prime SCHL estimée au taux ${(rate * 100).toFixed(2)} %.`;
+        } else if (mode === "refinancement") {
+          const soldeActuel = parseFloat(inputSoldeActuel.value);
+          const montantAjoute = parseFloat(inputMontantAjoute.value);
+
+          if (!Number.isFinite(soldeActuel) || soldeActuel <= 0)
+            return showError(
+              "Le solde hypothécaire actuel doit être numérique et supérieur à 0.",
+            );
+
+          if (!Number.isFinite(montantAjoute) || montantAjoute < 0)
+            return showError(
+              "Le montant additionnel refinancé doit être numérique et positif ou nul.",
+            );
+
+          const validationMessage = validateInputs(soldeActuel, tauxAnnuel, n);
+          if (validationMessage) return showError(validationMessage);
+
+          capitalDeCalcul = soldeActuel + montantAjoute;
+          note = `Mode refinancement : solde ${formatCAD(soldeActuel)} + montant additionnel ${formatCAD(montantAjoute)}.`;
+        } else {
+          const P = parseFloat(inputMontant.value);
+          const validationMessage = validateInputs(P, tauxAnnuel, n);
+          if (validationMessage) return showError(validationMessage);
+          capitalDeCalcul = P;
+          note = "Mode standard : prime SCHL non applicable.";
+        }
+
+        const result = calculateMortgage(capitalDeCalcul, tauxAnnuel, n);
+        const schedule = buildAmortizationSchedule(
+          capitalDeCalcul,
+          n,
+          result.mensuel,
+          result.r,
+        );
+
+        renderResults(result, capitalDeCalcul, primeSchl, capitalDeCalcul);
+        renderAmortizationTable(schedule);
+        schlNote.textContent = note;
+      });
+
+      form.addEventListener("reset", () => {
+        clearError();
+        setCalculatorMode();
+        resMensuel.textContent = "-";
+        resInterets.textContent = "-";
+        resTotal.textContent = "-";
+        resPrimeSchl.textContent = "-";
+        resPretAssure.textContent = "-";
+        donut.style.setProperty("--p", 50);
+        legend.textContent = "Capital 50 % • Intérêts 50 %";
+        schlNote.textContent = "Mode standard : prime SCHL non applicable.";
+        amortBody.innerHTML = "";
+        if (btnPdf) {
+          btnPdf.disabled = true;
+          btnPdf.title = "Calculez d'abord pour activer le rapport";
+        }
+      });
+
+      calcType.addEventListener("change", () => {
+        clearError();
+        setCalculatorMode();
+      });
+
+      modeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          calcType.value = btn.dataset.mode;
+          clearError();
+          setCalculatorMode();
+        });
+      });
+
+      setCalculatorMode();
+
+      // ===== PDF / IMPRESSION =====
+      const btnPdf = document.getElementById("btn-pdf");
+      const printReport = document.getElementById("print-report");
+      const printDate = document.getElementById("print-date");
+      const printParams = document.getElementById("print-params");
+
+      function buildPrintParams() {
+        const mode = calcType.value;
+        const modeLabels = {
+          standard: "Standard (montant du prêt)",
+          "nouvel-acheteur": "Nouvel acheteur (SCHL)",
+          refinancement: "Refinancement / Renouvellement",
+        };
+        const rows = [["Type de calculateur", modeLabels[mode] || mode]];
+        if (mode === "nouvel-acheteur") {
+          rows.push([
+            "Prix de la propriété",
+            formatCAD(parseFloat(inputPrixPropriete.value)),
+          ]);
+          rows.push([
+            "Mise de fonds",
+            formatCAD(parseFloat(inputMiseFonds.value)),
+          ]);
+          const pt =
+            inputPropertyType.value === "plex34"
+              ? "3-4 plex (propriétaire occupant)"
+              : "Unifamiliale / Condo / Duplex";
+          rows.push(["Type de propriété", pt]);
+        } else if (mode === "refinancement") {
+          rows.push([
+            "Solde hypothécaire actuel",
+            formatCAD(parseFloat(inputSoldeActuel.value)),
+          ]);
+          rows.push([
+            "Montant additionnel refinancé",
+            formatCAD(parseFloat(inputMontantAjoute.value)),
+          ]);
+        } else {
+          rows.push([
+            "Montant du prêt",
+            formatCAD(parseFloat(inputMontant.value)),
+          ]);
+        }
+        rows.push([
+          "Taux annuel",
+          parseFloat(inputTaux.value).toFixed(2) + " %",
+        ]);
+        const n = parseInt(inputDuree.value, 10);
+        rows.push(["Durée", n + " mois (" + (n / 12).toFixed(1) + " ans)"]);
+        printParams.innerHTML = rows
+          .map(
+            ([k, v]) =>
+              `<tr>
+            <td style="padding:0.35rem 0.6rem;border:1px solid #ddd">${k}</td>
+            <td style="padding:0.35rem 0.6rem;border:1px solid #ddd;text-align:right;font-weight:700">${v}</td>
+          </tr>`,
+          )
+          .join("");
+      }
+
+      btnPdf.addEventListener("click", () => {
+        printDate.textContent = new Date().toLocaleDateString("fr-CA", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        buildPrintParams();
+        printReport.style.display = "block";
+        setTimeout(() => {
+          window.print();
+          printReport.style.display = "none";
+        }, 80);
+      });
+    </script>
+  </body>
+</html>
